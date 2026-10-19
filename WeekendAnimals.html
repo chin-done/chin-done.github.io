@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>你的周末充电动物图鉴</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #FFF0F3 0%, #FFE4E1 50%, #FFF5E1 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+        #app {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+        .page {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 封面页 */
+        #cover {
+            text-align: center;
+            padding-top: 15vh;
+        }
+        .cover-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        h1 {
+            font-size: 28px;
+            color: #FF6B81;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #888;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: linear-gradient(135deg, #FF6B81, #FFA07A);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,107,129,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(255,107,129,0.4);
+        }
+
+        /* 答题页 */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B81, #FFA07A);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #FF6B81;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+        .question-text {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            color: #444;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            line-height: 1.4;
+        }
+        .option:hover {
+            border-color: #FFB6C1;
+        }
+        .option.selected {
+            background: linear-gradient(135deg, #FFF0F3, #FFE4E1);
+            border-color: #FF6B81;
+            transform: scale(1.02);
+        }
+        .option-letter {
+            font-weight: bold;
+            color: #FF6B81;
+            margin-right: 12px;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .nav-btn {
+            background: #fff;
+            border: 2px solid #FFB6C1;
+            color: #FF6B81;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn:active {
+            background: #FFB6C1;
+            color: white;
+        }
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* 加载页 */
+        #loading {
+            text-align: center;
+            padding-top: 30vh;
+        }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #FFE4E1;
+            border-top-color: #FF6B81;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 18px;
+            color: #FF6B81;
+            font-weight: 600;
+        }
+
+        /* 结果页 */
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .result-header h2 {
+            font-size: 24px;
+            color: #FF6B81;
+        }
+        .main-animal-card {
+            background: linear-gradient(135deg, #FFF0F3, #FFE4E1);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(255,107,129,0.15);
+            animation: slideUp 0.6s ease forwards;
+        }
+        .card-rank {
+            font-size: 14px;
+            background: linear-gradient(135deg, #FF6B81, #FFA07A);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .card-title {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .card-summary {
+            font-size: 16px;
+            color: #FF6B81;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .card-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .card-match {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFA07A;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FF6B81;
+            margin: 25px 0 15px;
+            text-align: center;
+        }
+
+        /* 柱状图 */
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+        }
+        .chart-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            padding: 10px 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .chart-bar-wrapper {
+            height: 70px;
+            width: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 6px;
+            overflow: hidden;
+        }
+        .chart-bar {
+            width: 100%;
+            background: linear-gradient(0deg, #FF6B81, #FFA07A);
+            border-radius: 10px;
+            height: 0%;
+            transition: height 1s ease;
+        }
+        .chart-match { font-size: 11px; font-weight: bold; color: #FF6B81; margin-bottom: 2px; }
+        .chart-emoji { font-size: 18px; margin-bottom: 2px; }
+        .chart-name { font-size: 10px; color: #666; text-align: center; }
+
+        /* 全部分析列表 */
+        .analysis-list {
+            margin-top: 10px;
+        }
+        .analysis-item {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            animation: slideUp 0.5s ease forwards;
+            opacity: 0;
+        }
+        .analysis-title { font-weight: bold; margin-bottom: 5px; font-size: 15px; }
+        .analysis-summary { font-size: 12px; color: #FF6B81; margin-bottom: 8px; font-weight: 600; }
+        .analysis-desc { font-size: 13px; color: #666; line-height: 1.5; }
+
+        .disclaimer {
+            background: rgba(255,255,255,0.8);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 25px;
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+        .disclaimer h3 {
+            color: #FF6B81;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .restart-btn {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .share-tip {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 15px;
+            color: #FF6B81;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            padding: 15px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 16px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 封面页 -->
+        <div id="cover" class="page active">
+            <div class="cover-emoji">🦥🐨🐬</div>
+            <h1>你的周末充电动物图鉴</h1>
+            <p class="subtitle">每个人恢复能量的方式都不同<br>测测你的本能充电模式是什么？</p>
+            <button class="btn" onclick="startTest()">开始测试</button>
+        </div>
+
+        <!-- 答题页 -->
+        <div id="quiz" class="page">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">1/32</div>
+            </div>
+            <div class="question-text" id="questionText"></div>
+            <div class="options" id="optionsContainer"></div>
+            <div class="quiz-nav">
+                <button class="nav-btn" id="prevBtn" onclick="prevQuestion()">上一题</button>
+                <button class="nav-btn" id="nextBtn" onclick="nextQuestion()">下一题</button>
+            </div>
+        </div>
+
+        <!-- 加载页 -->
+        <div id="loading" class="page">
+            <div class="loader"></div>
+            <p class="loading-text">正在分析你的充电DNA...</p>
+        </div>
+
+        <!-- 结果页 -->
+        <div id="result" class="page">
+            <div class="result-header">
+                <h2>✨ 你的周末充电动物图鉴 ✨</h2>
+            </div>
+            
+            <div id="mainAnimalCard" class="main-animal-card"></div>
+            
+            <div class="section-title">📊 十型匹配度一览</div>
+            <div class="chart-container" id="chartContainer"></div>
+            
+            <div class="section-title">📖 完整分析报告</div>
+            <div class="analysis-list" id="analysisList"></div>
+            
+            <div class="share-tip">📸 截屏保存结果，分享给朋友</div>
+            <button class="btn restart-btn" onclick="restartTest()">重新测试</button>
+            
+            <div class="disclaimer">
+                <h3>【你的周末充电说明书】</h3>
+                <p>每个人恢复能量的方式都不同，没有高下之分。这个测试帮你看见自己最本能的「充电模式」——无论是躺平、社交还是自我提升，接纳自己的节奏就是最好的休息。拿到结果后，不妨在下一个周末试着按你的「动物本能」去安排时间，停止内耗，高效回血！</p>
+                <br>
+                <h3>【娱乐声明】</h3>
+                <p>本测试基于趣味人格心理学设计，结果仅供娱乐放松，不作为专业心理测评或诊断依据。你的生活由你定义，测试结果仅为娱乐性参考，不具备专业效度，请理性看待。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 题目数据
+        const questions = [
+            { text: "周五晚上6点半，你终于下班/下课，你的第一反应是？", options: ["只想立刻回家躺平，享受独处时光", "迫不及待约朋友吃顿好的，分享一周趣事", "去健身房或夜跑，用汗水洗刷疲惫", "打开电脑，开始执行周末自我提升计划"] },
+            { text: "对于\"周末宅家\"这件事，你的态度是？", options: ["极度赞同，这是我的充电方式，拒绝出门", "偶尔可以，但要有点情调（如香薰、音乐）", "除非生病，否则绝对要出门活动", "宅家也要高效，比如收拾房间、做计划"] },
+            { text: "逛街时，你最容易被什么吸引？", options: ["气味好闻的香薰店或杂货铺", "颜值高的甜品店或网红咖啡", "户外用品店或运动品牌", "书店或文创店"] },
+            { text: "你如何看待\"花钱买体验\"？", options: ["不太愿意，觉得不如买实物来得实在", "非常赞同，享受服务带来的愉悦感", "赞同，认为经历比物质更重要", "更倾向投资于自我提升或未来规划"] },
+            { text: "如果你已经实现财务自由，你更愿意把时间花在？", options: ["让自己舒服的事上", "让自己变美的事上", "让自己变强的事上", "让自己开心的事上"] },
+            { text: "发工资/生活费后，你更可能如何奖励自己？", options: ["升级更换一个常用物品（如一套舒服的家居服）", "吃一顿期待已久的大餐或看一场演出", "报一门课程或买专业书籍", "存起来或投资理财"] },
+            { text: "当你想犒劳自己时，你通常会？", options: ["睡个懒觉或彻底放空", "去享受一次精致的服务（SPA/高级料理）", "挑战一项刺激的活动（如蹦极/密室）", "买一本一直想看的书"] },
+            { text: "上学/上班时，你的通勤或课间通常？", options: ["喜欢独来独往，享受个人空间", "常和固定小团体一起，有说有笑", "积极参与集体，是气氛调动者", "专注于任务，偶尔与人交流"] },
+            { text: "你更喜欢哪种社交模式？", options: ["线上聊天，不用见面", "深度一对一，聊点走心的话题", "热闹的派对，认识新朋友", "轻社交，比如参加读书会、桌游局、旅行团"] },
+            { text: "关于\"热闹与安静\"，你的真实想法是？", options: ["喜欢日常安静，但偶尔需要去人多的地方找点乐子", "天生爱热闹，安静久了会觉得无聊", "享受安静，但也能在热闹中自如切换", "无所谓，看和谁在一起"] },
+            { text: "你如何处理\"无效社交\"？", options: ["直接拒绝，不浪费时间", "礼貌笑笑，默默远离", "碍于人情硬着头皮参加，但内心煎熬", "尝试从中寻找价值，实在不行再放弃"] },
+            { text: "死党小聚中，你通常扮演什么角色？", options: ["组织者：负责选地方、订位、拉群讨论，是聚会的灵魂", "活跃者：擅长带动气氛，讲段子，让大家都开心", "倾听者：不太主动说话，但会认真听，适时附和，享受氛围", "隐形人：不太发表意见，别人去哪就去哪，存在感低"] },
+            { text: "同事/课题组聚餐，你的态度是？", options: ["能躲就躲，实在不行就去", "当作放松，可以吃吃喝喝", "积极融入，拓展人脉", "表面配合，内心想着工作"] },
+            { text: "大型派对/陌生人多的社交场，你会？", options: ["尽量避免，待一会儿就想走", "找个角落安静待着", "兴奋，主动认识新朋友", "观察环境，寻找有价值的人交流"] },
+            { text: "兴趣沙龙/读书会等轻社交活动，你更倾向于？", options: ["感兴趣就去，能学到东西", "喜欢这种有主题的安静社交", "更愿意自己看书，不想社交", "借此机会认识同频的人"] },
+            { text: "当工作/学习压力大时，你首先会选择怎样？", options: ["自己思考解决方案，不轻易求助", "找信任的朋友倾诉，寻求安慰", "去运动或去热闹场所释放情绪", "寻求专业建议或制定计划解决"] },
+            { text: "周一综合症犯了，你的解药是？", options: ["制定本周清晰的小目标，一步步执行", "给自己一个小奖励，比如喜欢的咖啡", "用运动开启新一周，保持活力", "规划下个周末的放松活动，作为盼头"] },
+            { text: "当你感到焦虑时，你最需要？", options: ["整理家务或打扫卫生，让环境恢复整洁", "完全放松，睡觉、看剧或刷短视频", "身体释放，大汗一场", "认知提升，看书找答案"] },
+            { text: "你释放负能量的方式是？", options: ["睡觉或放空，让时间冲淡", "写日记或记录情绪，并分析原因", "运动到出汗，释放身体压力", "大吃一顿或买点东西，用感官享受缓解情绪"] },
+            { text: "面对别人的批评，你通常？", options: ["左耳进右耳出，懒得计较", "表面接受，回家偷偷难过", "当场怼回去，或者生闷气", "反思自己，看有没有改进空间"] },
+            { text: "你的手机相册里最多的是？", options: ["表情包和搞笑视频", "风景、美食和自拍", "宠物、孩子或生活碎片", "学习资料、工作记录或截图"] },
+            { text: "已经按进度完成工作，并且没有很急的ddl，此时给你一周假期，你会？", options: ["在家躺一周，哪儿也不去", "去一个安静的度假村，放空", "制定一个满满当当的旅行计划", "报个集训班，学个新技能"] },
+            { text: "你最向往的生活状态是？", options: ["无忧无虑，没有压力", "岁月静好，现世安稳", "轰轰烈烈，精彩纷呈", "不断成长，成为更好的自己"] },
+            { text: "你觉得自己的\"能量来源\"是？", options: ["独处和休息", "美好的事物和感官享受", "外界的刺激和挑战", "知识的积累和目标的达成"] },
+            { text: "当别人评价你\"太卷了\"，你心里会？", options: ["无所谓，我卷我的", "否认，我只是做自己喜欢的事", "开心，说明我有上进心", "反思，是不是给同事带来压力了"] },
+            { text: "你如何看待\"松弛感\"？", options: ["天生就有，不需要刻意追求，本来就是慢节奏的人", "很向往，但自己容易焦虑，很难真正做到放松", "觉得是实力和阅历的结果，做好准备、有底气才能真松弛", "觉得就是\"懒\"的代名词，不太认同这个概念"] },
+            { text: "你的周末穿搭风格是？", options: ["怎么舒服怎么来，运动裤大T恤", "温柔风/文艺风，注重质感", "混搭风，舒服但要有格调", "运动/户外装，随时准备出发"] },
+            { text: "你最可能因为什么而兴奋？", options: ["发现了一家宝藏小店或美食", "买到了心仪已久的限量款", "完成了一个高难度项目", "计划了一次完美的短途旅行"] },
+            { text: "你的周末常态更接近？", options: ["彻底放松，恢复精力", "享受生活，小确幸满满", "充实忙碌，自我提升", "自由随性，无计划漫游"] },
+            { text: "对于\"自律\"，你的看法是？", options: ["自律是达到目标的工具，我会合理规划", "享受自律带来的秩序感和成就感", "自律太反人性，我更喜欢自由节奏", "看情况，在重要事情上自律，其他随意"] },
+            { text: "你如何评价自己的情绪波动？", options: ["像一潭死水，没什么波澜", "像天气，偶尔阴天但很快放晴", "像过山车，大起大落", "像电脑程序，尽量保持理性"] },
+            { text: "当遇到一个全新领域时，你的第一反应是？", options: ["先判断价值和意义，再决定要不要投入", "做计划，系统性地学习", "直接开干，在实践中摸索", "有点排斥，观望一阵"] }
+        ];
+
+        // 计分表 (顺序: 树懒, 考拉, 海豚, 鹰, 蜜蜂, 狐狸, 猫, 马, 松鼠, 蝴蝶)
+        const scores = {
+            1: { A: [9,3,1,0,0,2,7,0,1,0], B: [0,2,9,2,1,5,1,2,1,3], C: [0,1,3,4,2,1,0,9,2,1], D: [0,1,0,5,9,2,1,3,7,2] },
+            2: { A: [9,4,0,0,0,1,6,0,1,0], B: [3,9,1,0,1,5,4,0,2,1], C: [0,1,5,8,2,2,0,7,2,4], D: [1,3,0,4,8,2,2,3,8,2] },
+            3: { A: [4,8,0,0,1,3,5,0,3,1], B: [1,4,3,1,2,9,3,1,2,4], C: [0,1,2,7,3,2,0,8,2,3], D: [1,3,1,4,7,3,2,1,9,3] },
+            4: { A: [7,5,0,0,1,2,4,0,2,0], B: [1,4,4,2,2,9,3,1,2,3], C: [0,1,6,8,3,3,0,5,3,7], D: [0,1,1,5,9,4,1,2,8,3] },
+            5: { A: [8,4,0,0,0,2,7,0,1,1], B: [1,3,2,1,2,9,4,1,2,3], C: [0,1,2,5,9,3,1,6,6,2], D: [2,2,8,3,3,5,2,3,2,6] },
+            6: { A: [7,5,0,1,1,4,6,0,2,1], B: [2,3,5,3,2,8,3,2,2,4], C: [0,1,2,5,8,3,1,3,7,3], D: [0,1,0,4,7,2,0,2,8,2] },
+            7: { A: [8,4,0,1,1,2,7,0,2,1], B: [1,4,3,2,2,9,3,1,2,3], C: [0,1,4,8,3,3,0,7,2,5], D: [1,2,1,4,7,3,2,1,9,2] },
+            8: { A: [6,3,0,1,2,1,9,0,3,1], B: [2,6,7,2,2,4,4,2,2,3], C: [1,2,9,3,3,5,1,4,2,6], D: [1,2,2,5,8,2,3,3,7,2] },
+            9: { A: [5,3,1,0,1,1,8,0,3,2], B: [2,7,4,1,2,5,6,1,3,3], C: [1,2,9,4,2,4,1,5,2,7], D: [2,4,5,3,4,3,2,2,6,9] },
+            10: { A: [6,4,2,1,0,3,7,1,2,5], B: [0,2,9,3,1,4,1,3,1,7], C: [2,5,6,4,3,5,3,4,3,6], D: [3,4,5,2,2,4,4,2,2,4] },
+            11: { A: [5,3,1,2,3,2,6,1,2,1], B: [3,7,1,1,2,3,7,0,3,2], C: [1,2,3,2,4,2,3,2,3,1], D: [1,2,2,5,7,4,2,2,6,3] },
+            12: { A: [1,2,4,6,9,5,2,2,4,3], B: [1,3,9,2,2,6,2,4,2,5], C: [2,7,5,1,3,4,6,1,3,2], D: [7,5,1,0,1,2,8,0,2,1] },
+            13: { A: [7,5,1,0,1,2,6,0,2,1], B: [2,6,5,2,2,4,4,2,2,3], C: [1,2,6,5,4,5,2,3,4,7], D: [1,2,2,4,8,3,3,2,7,2] },
+            14: { A: [8,4,1,0,1,2,7,0,2,1], B: [4,7,2,1,2,3,6,1,3,2], C: [1,2,9,4,2,4,1,5,2,7], D: [1,2,4,7,5,6,2,3,5,4] },
+            15: { A: [2,3,2,4,7,3,2,2,6,5], B: [2,7,3,2,3,4,5,1,4,6], C: [6,5,1,1,2,2,7,0,3,1], D: [1,3,5,3,4,4,3,2,5,8] },
+            16: { A: [3,2,1,4,5,2,6,2,4,2], B: [2,5,8,1,2,4,4,2,2,4], C: [0,2,5,6,3,2,1,9,2,3], D: [1,2,2,7,9,3,2,4,7,3] },
+            17: { A: [1,2,1,5,9,3,2,4,7,2], B: [2,4,5,2,3,8,4,2,3,4], C: [0,2,4,6,4,2,1,9,2,3], D: [3,5,3,7,4,3,3,3,5,6] },
+            18: { A: [3,7,0,1,4,2,5,2,6,1], B: [7,5,1,0,1,3,8,0,3,2], C: [0,1,4,6,4,2,0,9,2,3], D: [1,2,1,5,8,3,2,3,9,3] },
+            19: { A: [8,4,1,0,1,2,7,0,2,1], B: [2,4,1,3,5,3,4,1,9,2], C: [0,1,4,6,4,2,0,9,2,3], D: [2,5,3,2,3,8,4,2,3,4] },
+            20: { A: [7,3,1,2,2,2,8,1,2,1], B: [3,6,2,1,2,4,7,0,3,2], C: [2,2,5,7,3,3,2,4,2,3], D: [1,3,2,6,9,3,2,3,7,2] },
+            21: { A: [6,3,2,1,1,3,7,1,3,4], B: [2,4,5,3,2,8,5,2,3,5], C: [3,7,3,2,2,4,6,1,4,3], D: [1,2,1,5,9,2,1,3,8,2] },
+            22: { A: [9,5,0,0,0,1,7,0,1,0], B: [3,9,2,1,1,5,5,0,3,2], C: [0,2,5,9,3,3,1,6,4,7], D: [0,1,1,5,9,2,1,3,8,3] },
+            23: { A: [8,6,1,0,0,2,5,0,1,1], B: [2,9,3,1,1,5,6,1,2,3], C: [1,2,8,6,3,4,2,5,3,7], D: [0,1,2,5,9,3,1,4,7,3] },
+            24: { A: [8,5,1,0,1,2,7,0,2,1], B: [2,5,4,2,2,9,4,2,3,4], C: [1,2,6,8,4,4,1,7,3,6], D: [0,1,1,5,9,3,1,3,8,3] },
+            25: { A: [2,1,2,4,8,2,3,4,5,2], B: [3,4,3,2,4,7,6,2,3,3], C: [1,1,3,5,8,3,2,5,4,3], D: [2,5,2,3,6,4,4,2,5,2] },
+            26: { A: [6,7,2,1,1,2,8,0,2,1], B: [3,5,3,2,3,4,7,1,4,2], C: [1,2,3,8,7,4,2,4,6,4], D: [2,2,2,4,5,3,3,3,4,2] },
+            27: { A: [8,4,1,2,2,2,7,3,2,1], B: [2,8,2,1,2,6,5,1,3,3], C: [3,5,3,3,3,7,6,2,3,4], D: [1,2,3,6,4,3,1,9,2,3] },
+            28: { A: [3,6,3,2,2,7,5,1,3,4], B: [2,3,4,3,3,9,4,2,2,4], C: [0,1,3,6,9,3,1,5,6,3], D: [1,3,5,8,4,4,2,4,5,7] },
+            29: { A: [9,5,1,0,1,2,6,0,2,1], B: [2,8,4,1,2,7,5,1,3,4], C: [0,2,3,5,9,3,1,4,7,3], D: [4,5,3,3,2,4,7,2,3,6] },
+            30: { A: [1,2,2,6,8,3,2,4,7,3], B: [1,3,2,5,9,3,2,5,6,2], C: [7,5,2,1,2,3,8,1,3,2], D: [3,6,4,3,5,6,5,3,4,4] },
+            31: { A: [5,7,1,1,2,2,6,1,3,1], B: [3,5,4,2,3,4,7,2,4,3], C: [1,2,8,5,3,4,2,6,3,5], D: [2,2,2,6,9,3,2,4,8,2] },
+            32: { A: [2,3,2,5,7,4,3,2,8,4], B: [1,2,2,7,9,3,2,4,7,3], C: [1,1,4,8,5,3,1,7,4,5], D: [6,5,2,2,3,3,7,1,4,2] }
+        };
+
+        // ========== 修改点2：MaxS改为固定值（规则二，保留在数据中供参考，匹配度计算不再使用） ==========
+        const animals = [
+            { name: "树懒", emoji: "🦥", summary: "彻底躺平·能量回血", desc: "周末对你来说，最大的意义就是\"把工作日欠下的觉全补回来\"。你拒绝一切不必要的社交和出门计划，最理想的状态是穿着睡衣窝在沙发里，点一份外卖，从早到晚刷剧或打游戏。你不是懒，你只是太累了，需要像树懒一样用最低能耗的模式来恢复元气。你的优点是能迅速切断外界干扰，用最低能耗帮自己满血复活，拒绝无效社交，保护精力边界感极强，但缺点是长期躺平容易让周末变成\"睡过去的两天\"，社交圈逐渐萎缩，遇到需要出门的突发状况时反应迟钝。", max: 208 },
+            { name: "考拉", emoji: "🐨", summary: "宅家舒适·氛围感回血", desc: "比起出门人挤人，你更享受在属于自己的小天地里\"充电\"。周末的你喜欢把房间收拾干净，点上香薰，泡一杯花茶，看看书或做做手账。你追求的是精神上的放松和生活的仪式感，哪怕只是给绿植浇浇水、整理一下衣柜，都能让你感到无比治愈。你的优点是擅长把独处时光经营得有滋有味，通过仪式感和秩序感有效对抗职场内耗，情绪自愈能力强，缺点是容易用\"收拾房间\"\"泡杯好茶\"等低耗能仪式逃避真正需要面对的问题，偶尔精致得有点自我感动。", max: 200 },
+            { name: "海豚", emoji: "🐬", summary: "社交狂欢·外向充电", desc: "\"周末不出门，等于没过周末！\"你是一个典型的\"社交充电宝\"，人越多你越兴奋。无论是约闺蜜逛街、吃brunch，还是去酒吧、KTV，只要身处人群中，你的能量值就会直线飙升。你的优点是社交恢复效率极高，一场聚会就能把工作日的压力全部清零，人缘好、气场强，走到哪里都是气氛担当，缺点是一旦周末没人约就容易陷入空虚焦虑，过度依赖外部刺激获取能量，独处时反而不知道怎么和自己相处。", max: 183 },
+            { name: "鹰", emoji: "🦅", summary: "特种兵旅行·见世面回血", desc: "你的周末从不浪费，主打一个\"世界那么大，我想去看看\"。哪怕只有两天，你也要规划一次周边游或城市walk，去爬山、去海边、去打卡新展。这种\"特种兵式\"的充电方式虽然身体累，但精神上却无比充实。你的优点是把周末利用率拉到最高，每次出行都能带回新鲜感和高质量素材，视野不断拓宽，精神状态饱满充实，缺点是特种兵节奏常常让身体在周一比周五还累，而且容易把旅行变成另一种打卡KPI，反而没真正放松下来。", max: 199 },
+            { name: "蜜蜂", emoji: "🐝", summary: "自我提升·技能点满", desc: "当别人都在休息时，你却在偷偷\"卷\"自己。周末是你的\"黄金提升期\"，你会用来学英语、考证书、上瑜伽课，或者研究副业。你享受这种\"充实感\"，觉得把时间花在自我成长上才是最有价值的。你的优点是把休息时间转化为长期竞争力，每一分投入都在为未来的自己铺路，自律带来的掌控感让人底气十足，缺点是很难允许自己\"什么都不干\"，休息时会产生强烈的罪恶感，容易把充电变成另一种内卷。", max: 283 },
+            { name: "狐狸", emoji: "🦊", summary: "感官享受·悦己至上", desc: "你深谙\"悦己\"之道，周末就是你的\"宠爱日\"。你会花两小时化个精致的妆，去做SPA、美甲、买新衣服，或者去吃一顿期待已久的大餐。你享受这种被美好事物包围的感觉，认为赚钱就是为了更好地享受生活。你的优点是深谙\"赚钱是为了更好地花\"的道理，通过高品质感官体验快速修复情绪，精致自信的状态让人羡慕，缺点是充电成本偏高，月底钱包容易抗议，而且过度关注外在享受可能忽略内心真正的需求。", max: 200 },
+            { name: "猫", emoji: "🐱", summary: "随性漫游·无目的放电", desc: "你不喜欢被计划束缚，周末的打开方式是\"随缘\"。可能只是下楼买杯咖啡，顺便逛逛花店；也可能是在书店发呆一下午，或者去猫咖撸猫。你享受这种\"无目的漫游\"带来的松弛感，不需要赶时间，不需要打卡，只是跟着感觉走。你的优点是松弛感满分，不被计划绑架，跟着直觉走反而常能撞见意外的美好，是真正的\"慢生活实践者\"，缺点是缺乏规划容易让重要事项一拖再拖，长期无目标漫游偶尔会让人陷入\"我在干嘛\"的空虚感。", max: 223 },
+            { name: "赛马", emoji: "🐎", summary: "挥汗如雨·运动排毒", desc: "你相信\"运动是解决一切烦恼的良药\"。周末的你会换上运动装，去健身房撸铁、跑步，或者去户外骑行、攀岩。当你大汗淋漓时，感觉所有的负能量都随着汗水排出了体外。你的优点是用身体疲劳置换心理疲惫，大汗一场后负能量确实能随汗液排出，体能和外形管理双赢，缺点是容易把运动当万能解药，忽视情绪层面的疏导，一旦受伤停训就容易崩心态，缺少替代性放松方案。", max: 180 },
+            { name: "松鼠", emoji: "🐿️", summary: "囤积素材·精神食粮", desc: "你的周末是\"信息大爆炸\"的时间。你会花大量时间刷小红书、看纪录片、听播客，或者去逛博物馆、看话剧。你像松鼠囤松果一样囤积知识和灵感，觉得\"大脑吃饱了，心里才踏实\"。你的优点是充电的同时不断给大脑囤积素材，知识面越攒越广，是朋友圈里最有想法和创意的人，缺点是输入狂魔、输出困难，收藏夹吃灰是常态，而且久坐刷信息容易让身体比大脑更先罢工。", max: 219 },
+            { name: "蝴蝶", emoji: "🦋", summary: "浅层社交·换圈子放松", desc: "你不喜欢固定的圈子，周末喜欢去参加各种兴趣小组、读书会或脱口秀开放麦。你享受那种\"和不熟的人聊天\"的轻松感，因为没有利益纠葛，反而能更真实地做自己。你的优点是能在不同圈子间自由切换，轻社交带来新鲜感和低压力，没有利益纠葛的环境让人更容易做自己，缺点是人际关系偏浅，很难建立深度信任，精力分散在太多群体里，哪个都没法深耕，热闹散场后偶尔会莫名孤独。", max: 168 }
+        ];
+
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let allResults = [];
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function startTest() {
+            currentQuestion = 0;
+            userAnswers = new Array(questions.length).fill(null);
+            switchPage('quiz');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('questionText').textContent = `${currentQuestion + 1}. ${q.text}`;
+            
+            updateProgress();
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            const letters = ['A', 'B', 'C', 'D'];
+            q.options.forEach((opt, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                if (userAnswers[currentQuestion] === index) {
+                    div.classList.add('selected');
+                }
+                div.innerHTML = `<span class="option-letter">${letters[index]}</span> ${opt}`;
+                div.onclick = () => selectOption(index, div);
+                container.appendChild(div);
+            });
+
+            document.getElementById('prevBtn').disabled = currentQuestion === 0;
+            
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentQuestion === questions.length - 1) {
+                nextBtn.textContent = '完成';
+            } else {
+                nextBtn.textContent = '下一题';
+            }
+        }
+
+        function selectOption(optIndex, element) {
+            userAnswers[currentQuestion] = optIndex;
+            
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            updateProgress();
+            
+            if (currentQuestion < questions.length - 1) {
+                setTimeout(() => {
+                    currentQuestion++;
+                    showQuestion();
+                }, 0);
+            }
+        }
+
+        function updateProgress() {
+            const answeredCount = userAnswers.filter(a => a !== null).length;
+            const progress = (answeredCount / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${currentQuestion + 1}/${questions.length}`;
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (userAnswers[currentQuestion] === null) {
+                alert('请先选择一个选项哦~');
+                return;
+            }
+            
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                calculateAndShowResult();
+            }
+        }
+
+        function calculateAndShowResult() {
+            // ========== 修改点1：计分表直接使用原始分值（规则一：移除映射函数，直接查表累加） ==========
+            let userScores = new Array(10).fill(0);
+            userAnswers.forEach((optIndex, qIndex) => {
+                const qNum = qIndex + 1;
+                const optLetter = ['A', 'B', 'C', 'D'][optIndex];
+                const scoreArr = scores[qNum][optLetter];
+                scoreArr.forEach((score, idx) => {
+                    userScores[idx] += score; // 直接使用原始分值累加
+                });
+            });
+            
+            // ========== 修改点3：匹配度计算公式（规则三：线性公式，分母固定210，封顶100%） ==========
+            // ========== 修改点2：MaxS固定值已在animals数组中定义，此处不再参与计算 ==========
+            allResults = animals.map((animal, idx) => {
+                const s = userScores[idx];
+                const match = Math.min(100, Math.round((s / 210) * 100));
+                return { ...animal, score: s, match: match };
+            });
+            
+            // ========== 修改点4：结果排序与展示保持不变（规则四） ==========
+            allResults.sort((a, b) => b.match - a.match);
+            
+            const main = allResults[0];
+            document.getElementById('mainAnimalCard').innerHTML = `
+                <div class="card-rank" style="font-size:16px;padding:6px 16px;">🥇 你的本命充电动物</div>
+                <div class="card-title" style="font-size:32px;">${main.emoji} ${main.name}型</div>
+                <div class="card-summary" style="font-size:18px;">${main.summary}</div>
+                <div class="card-desc">${main.desc}</div>
+                <div class="card-match" style="font-size:24px;">匹配度 ${main.match}%</div>
+            `;
+            
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.innerHTML = '';
+            allResults.forEach(r => {
+                const col = document.createElement('div');
+                col.className = 'chart-col';
+                col.innerHTML = `
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" data-height="${r.match}"></div>
+                    </div>
+                    <div class="chart-match">${r.match}%</div>
+                    <div class="chart-emoji">${r.emoji}</div>
+                    <div class="chart-name">${r.name}</div>
+                `;
+                chartContainer.appendChild(col);
+            });
+            
+            const listContainer = document.getElementById('analysisList');
+            listContainer.innerHTML = '';
+            allResults.forEach((r, idx) => {
+                const item = document.createElement('div');
+                item.className = 'analysis-item';
+                item.style.animationDelay = `${idx * 0.1}s`;
+                item.innerHTML = `
+                    <div class="analysis-title">${idx + 1}. ${r.emoji} ${r.name}型 <span style="float:right;color:#FFA07A;font-weight:bold;">${r.match}%</span></div>
+                    <div class="analysis-summary">${r.summary}</div>
+                    <div class="analysis-desc">${r.desc}</div>
+                `;
+                listContainer.appendChild(item);
+            });
+            
+            switchPage('loading');
+            setTimeout(() => {
+                switchPage('result');
+                setTimeout(() => {
+                    document.querySelectorAll('.chart-bar').forEach(bar => {
+                        bar.style.height = bar.getAttribute('data-height') + '%';
+                    });
+                }, 100);
+            }, 2000);
+        }
+
+        function restartTest() {
+            switchPage('cover');
+        }
+    </script>
+</body>
+</html>
